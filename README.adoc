@@ -1,0 +1,67 @@
+[[bats_plugin]]
+= The Bats Plugin
+
+The Bats plugin executes https://github.com/bats-core/bats-core[Bats] tests.
+
+[[sec:bats_usage]]
+== Usage
+
+To use the Bats plugin, include the following in your build script:
+
+[source,kotlin]
+----
+plugins {
+    id("com.felipefzdz.gradle.bats") version "0.0.1"
+}
+----
+
+The plugin adds a task to the project called `bats` that performs the testing.
+
+[[sec:bats_tasks]]
+== Tasks
+
+The Bats plugin adds a task called `bats` to the project.
+
+[[sec:bats_extension]]
+=== Extension
+
+[source,groovy]
+----
+bats {
+    sources = files("src/test", "src/moreTests")
+    isUseDocker = true
+    batsBinary = "/usr/local/bin/bats"
+    installer = "brew"
+    workingDir = file("${buildDir}/tests")
+}
+----
+
+* sources - Folders where the bats tests are located. It will execute every `.bats` file on those folders.
+* isUseDocker - Whether to use docker image (true) or local bats binary (false). Defaults to `true`. It uses this[https://hub.docker.com/repository/docker/felipefzdz/bats] custom Docker image, 1.3.0 tag,
+that embeds some libraries.
+* batsBinary - /path/to/bats binary. Defaults to `/usr/local/bin/bats`. Ignored if `useDocker` is `true`.
+* installer - for a machine without Docker or the bats binary being installed, provide the installer to be used. It supports `brew` and `npm`
+as specified https://bats-core.readthedocs.io/en/latest/installation.html[here]. It will also install the `bats` libraries specified
+https://github.com/kaos/homebrew-shell/tree/master/Formula[here].
+* workingDir - Sets the working directory to run shellcheck from. Defaults to the project directory.
+
+[[sec:bats_testing]]
+== Testing
+
+With the addition of non Docker mode where a binary is supposed to be previously installed in the executing machine, we introduced a source
+of non portability of the automated tests. To mitigate so, `BatsBinaryPluginFuncTest` will be ignored unless an env var called
+`BATS_PATH` will be present.
+
+[[sec:bats_docker]]
+== Docker
+
+WHen using Docker, it uses this[https://hub.docker.com/repository/docker/felipefzdz/bats] custom Docker image, 1.3.0 tag,
+that embeds some libraries.
+
+This image is based on this fork https://github.com/felipefzdz/bats-core/blob/master/Dockerfile
+
+It adds bats-assert, bats-file, bats-mock and bats-support, so you can use them in contexts where you are not allowed to install dependencies, e.g CI agents.
+
+The libraries will be available in the actual BATS tests by doing this:
+
+load "/code/test_helper/${name}/load.bash"
